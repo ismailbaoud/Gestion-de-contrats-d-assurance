@@ -13,7 +13,6 @@ public class AdvisorView {
         helper.print("2. Remove an advisor by ID");
         helper.print("3. Find an advisor by ID");
         helper.print("4. Show clients of an advisor by ID");
-        helper.print("5. Add a client to an advisor");
         helper.print("0. Exit");
         Integer choice = scanner.nextInt();
         return choice;

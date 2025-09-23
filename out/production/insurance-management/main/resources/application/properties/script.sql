@@ -8,7 +8,7 @@ USE AssuranceDB;
 -- Table Conseiller
 -- ==============================================
 CREATE TABLE Advisor (
-    id VARCHAR PRIMARY KEY,
+    id VARCHAR(200) PRIMARY KEY,
     firstname VARCHAR(100) NOT NULL,
     lastname VARCHAR(100) NOT NULL,
     email VARCHAR(150) UNIQUE NOT NULL
@@ -18,16 +18,19 @@ CREATE TABLE Advisor (
 -- Table Client
 -- Chaque client est lié à un conseiller (optionnel)
 -- ==============================================
-CREATE TABLE Client (
-    id INT PRIMARY KEY,
-    nom VARCHAR(100) NOT NULL,
-    prenom VARCHAR(100) NOT NULL,
+ CREATE TABLE Client (
+    id CHAR(200) PRIMARY KEY,
+    firstname VARCHAR(100) NOT NULL,
+    lastname VARCHAR(100) NOT NULL,
     email VARCHAR(150) UNIQUE NOT NULL,
-    idConseiller INT,
-    FOREIGN KEY (id) REFERENCES Conseiller(id)
-        ON DELETE SET NULL
-        ON UPDATE CASCADE
-);
+    idAdvisor CHAR(200) NULL,
+    CONSTRAINT fk_client_advisor
+         FOREIGN KEY (idAdvisor) REFERENCES Advisor(id)
+         ON DELETE SET NULL
+         ON UPDATE CASCADE
+ );
+
+
 
 -- ==============================================
 -- Données de test (optionnel)
@@ -40,3 +43,4 @@ CREATE TABLE Client (
 --('Durand', 'Paul', 'paul.durand@gmail.com', 1),
 --('Lefevre', 'Claire', 'claire.lefevre@gmail.com', 1),
 --('Bernard', 'Luc', 'luc.bernard@gmail.com', 2);
+
