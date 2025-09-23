@@ -1,9 +1,11 @@
 package main.java.com.ismail.insurancemanagement.controller;
 
 import main.java.com.ismail.insurancemanagement.model.Advisor;
+import main.java.com.ismail.insurancemanagement.model.Client;
 import main.java.com.ismail.insurancemanagement.service.AdvisorService;
 import main.java.com.ismail.insurancemanagement.util.Helper;
 
+import java.util.ArrayList;
 import java.util.UUID;
 
 public class AdvisorController {
@@ -17,11 +19,15 @@ public class AdvisorController {
         }
     }
 
-    public boolean deleteAdvisor(UUID id) {
+    public boolean deleteAdvisor(String id) {
         return advisorService.deleteAdvisor(id);
     }
 
-    public Advisor findAdvisor(UUID id) {
+    public Advisor findAdvisor(String id) {
         return  advisorService.findAdvisor(id);
+    }
+
+    public ArrayList<Client> AdvisorClients(UUID id) {
+        return  advisorService.AdvisorClients(id);
     }
 }

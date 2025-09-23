@@ -1,13 +1,16 @@
 package main.java.com.ismail.insurancemanagement.controller;
 
 import main.java.com.ismail.insurancemanagement.model.Advisor;
+import main.java.com.ismail.insurancemanagement.model.Client;
 import main.java.com.ismail.insurancemanagement.util.Helper;
 import main.java.com.ismail.insurancemanagement.view.AdvisorView;
 import main.java.com.ismail.insurancemanagement.view.ClientView;
 
 import javax.imageio.plugins.tiff.TIFFImageReadParam;
+import java.util.ArrayList;
 import java.util.Scanner;
 import java.util.UUID;
+
 
 public class MainController {
     //view instantiation
@@ -68,8 +71,8 @@ public class MainController {
                     displayAdvisorDetails(advisor);
                     break;
                 case 4:
-                    break;
-                case 5:
+                    AdvisorClients();
+                    helper.print("clients");
                     break;
                 case 0:
                     helper.print("Good Bye !");
@@ -98,8 +101,7 @@ public class MainController {
         try {
 
             helper.print("Please enter the Id of advisor : ");
-            String idStr = scanner.next();
-            UUID id = UUID.fromString(idStr);
+            String id = scanner.next();
             advisorController.deleteAdvisor(id);
         } catch (IllegalArgumentException e) {
             helper.print("Invalid UUID format. Please try again.");
@@ -110,9 +112,22 @@ public class MainController {
 
     public Advisor findAdvisor() {
         helper.print("Please enter the advisor Id :");
-        String stId = scanner.next();
-        UUID id = UUID.fromString(stId);
+        String id = scanner.next();
         return advisorController.findAdvisor(id);
+
+    }
+
+    //find clients of advisor
+
+    public ArrayList<Client> AdvisorClients() {
+            try {
+                helper.print("please enter the advisor id");
+                String stId = scanner.next();
+                UUID advId = UUID.fromString(stId);
+                return  advisorController.AdvisorClients(advId);
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
     }
 
     public void displayAdvisorDetails(Advisor advisor) {
@@ -127,10 +142,13 @@ public class MainController {
             switch (choice){
                 case 1:
                     createClient();
+                    System.out.println("Client created successfully");
                     break;
                 case 2:
+                    clientView.displayClient(findClientById());
                     break;
                 case 3:
+                    clientView.displayClient(findClientByLastName());
                     break;
                 case 4:
                     break;
@@ -147,12 +165,32 @@ public class MainController {
 
     //create client
     public boolean createClient() {
-            helper.print("PLease enter first name : ");
-            String firstName = scanner.next();
-            helper.print("Please enter last name : ");
-            String lastName = scanner.next();
-            helper.print("please enter email : ");
-            String email = scanner.next();
-            return advisorController.create(firstName,lastName,email);
-        }
+        helper.print("PLease enter first name : ");
+        String firstName = scanner.next();
+        helper.print("Please enter last name : ");
+        String lastName = scanner.next();
+        helper.print("please enter email : ");
+        String email = scanner.next();
+        helper.print("please enter the advisor Id : ");
+        String id = scanner.next();
+        return clientController.create(firstName,lastName,email,id);
+    }
+
+
+    //display client
+    public Client findClientById() {
+        helper.print("Please enter the client Id : ");
+        String id = scanner.next();
+        Client client = clientController.findClientById(id);
+        return client;
+    }
+
+    public Client findClientByLastName() {
+        helper.print("Please enter the client last name : ");
+        String lastName = scanner.next();
+        Client client = clientController.findClientByLastName(lastName);
+        return client;
+    }
+
+
 }
