@@ -4,11 +4,12 @@ import main.java.com.ismail.insurancemanagement.config.ConnectionDB;
 import main.java.com.ismail.insurancemanagement.model.Advisor;
 import main.java.com.ismail.insurancemanagement.model.Client;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
+import java.sql.*;
+import java.util.ArrayList;
+import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class ClientDAO {
     Connection conn;
@@ -31,7 +32,7 @@ public class ClientDAO {
         }
     }
 
-    public Client findClientById(String id) {
+    public Optional<Client> findClientById(String id) {
         Client client;
         Advisor advisor;
         String sql = "Select c.* , a.* from Client c join Advisor a ON c.idAdvisor = a.id where c.id = ?";
@@ -44,20 +45,19 @@ public class ClientDAO {
                 advisor = new Advisor(rs.getString("a.firstname"),rs.getString("a.lastname"),rs.getString("a.email"));
                 advisor.setId(UUID.fromString(rs.getString("a.id")));
                 client.setAdvisor(advisor);
-                return client;
-            }else {
-                return null;
+                return Optional.of(client);
             }
-        } catch (Exception e) {
+            return Optional.empty();
+        } catch (SQLException e) {
             throw new RuntimeException(e);
         }
     }
 
-    public Client findClientByLastName(String lastName) {
+    public ArrayList<Client> findClientByLastName(String lastName) {
         Client client;
-        String sql = "SELECT c.* a.* from Client joint Advisor on c.lastname = a.lastname where c.lastname = ?";
+        ArrayList<Client> clients = new ArrayList<Client>();
+        String sql = "SELECT c.* , a.* from Client c join Advisor a ON c.idAdvisor = a.id";
         try (PreparedStatement stmt = conn.prepareStatement(sql)){
-            stmt.setString(1, lastName);
             ResultSet rs = stmt.executeQuery();
             if (rs.next()) {
                 client = new Client(
@@ -69,10 +69,43 @@ public class ClientDAO {
                 );
                 advisor.setId(UUID.fromString(rs.getString("a.id")));
                 client.setAdvisor(advisor);
-                return client;
+                clients.add(client);
+
             }else {
                 return null;
             }
+             clients = clients.stream().filter((a)->a.getLastName().equals(lastName)).collect(Collectors.toCollection(ArrayList::new ));
+            return clients;
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public boolean deleteClient(String id) {
+        String sql = "delete from Client where id = ?";
+        try (PreparedStatement stmt = conn.prepareStatement(sql)){
+            stmt.setString(1, id);
+            return stmt.executeUpdate() > 0 ;
+        }catch (SQLException e) {
+            System.out.println("You have error :  " + e.getMessage());
+        }
+        return false;
+    }
+
+    public ArrayList<Client> getAllClients() {
+        String sql = "SELECT c.* , a.* from Client c join Advisor a on c.idAdvisor = a.id";
+        ArrayList<Client> clients = new ArrayList<Client>();
+        try (Statement stmt = conn.createStatement()){
+            ResultSet rs = stmt.executeQuery(sql);
+            while (rs.next()) {
+                Client client = new Client(rs.getString("c.firstname"), rs.getString("c.lastname"),rs.getString("c.email"));
+                    client.setId(UUID.fromString(rs.getString("c.id")));
+                Advisor advisor = new Advisor(rs.getString("a.firstname"), rs.getString("a.lastname"), rs.getString("a.email"));
+                    advisor.setId(UUID.fromString(rs.getString("a.id")));
+                    client.setAdvisor(advisor);
+                    clients.add(client);
+            }
+            return clients;
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
