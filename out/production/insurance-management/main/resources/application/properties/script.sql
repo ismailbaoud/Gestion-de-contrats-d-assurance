@@ -16,7 +16,7 @@ CREATE TABLE Advisor (
 
 -- ==============================================
 -- Table Client
--- Chaque client est lié à un conseiller (optionnel)
+-- Chaque client est lié à un conseiller
 -- ==============================================
  CREATE TABLE Client (
     id CHAR(200) PRIMARY KEY,
@@ -30,17 +30,41 @@ CREATE TABLE Advisor (
          ON UPDATE CASCADE
  );
 
+-- ==============================================
+-- Table Contract
+-- Chaque contrat est lié à un client
+-- ==============================================
 
+CREATE TABLE Contract (
+    id VARCHAR(200) PRIMARY KEY,
+    type ENUM('AUTOMOBILE', 'REAL_ESTATE', 'HEALTH'),
+    startDate DATE,
+    endDate DATE,
+    idClient CHAR(200) NULL,
+    CONSTRAINT fk_contract_client FOREIGN KEY (idClient) REFERENCES Client(id)
+        ON DELETE SET NULL
+        ON UPDATE CASCADE
+);
 
 -- ==============================================
--- Données de test (optionnel)
+-- Table Claim
+-- Chaque sinistre est lié à un contrat
 -- ==============================================
---INSERT INTO Conseiller (nom, prenom, email) VALUES
---('Dupont', 'Jean', 'jean.dupont@assurance.com'),
---('Martin', 'Sophie', 'sophie.martin@assurance.com');
 
---INSERT INTO Client (nom, prenom, email, idConseiller) VALUES
---('Durand', 'Paul', 'paul.durand@gmail.com', 1),
---('Lefevre', 'Claire', 'claire.lefevre@gmail.com', 1),
---('Bernard', 'Luc', 'luc.bernard@gmail.com', 2);
+CREATE TABLE Claim (
+    id VARCHAR(200) PRIMARY KEY,
+    type ENUM('CAR_ACCIDENT', 'HOUSE_ACCIDENT', 'ILLNESS') NOT NULL,
+    amount DECIMAL(10,2) NOT NULL,
+    description TEXT,
+    startDate DATE NOT NULL,
+    endDate DATE NOT NULL,
+    idContract VARCHAR(200),
+    CONSTRAINT fk_claim_contract FOREIGN KEY (idContract)
+        REFERENCES Contract(id)
+        ON DELETE CASCADE
+        ON UPDATE CASCADE
+);
+
+
+
 
