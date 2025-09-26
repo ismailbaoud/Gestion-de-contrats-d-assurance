@@ -92,4 +92,6 @@ public class Claim {
     public void setContract(Contract contract) {
         this.contract = contract;
     }
+
+
 }

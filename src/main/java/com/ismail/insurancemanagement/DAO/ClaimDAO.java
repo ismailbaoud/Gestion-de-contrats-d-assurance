@@ -2,16 +2,15 @@ package main.java.com.ismail.insurancemanagement.DAO;
 
 import main.java.com.ismail.insurancemanagement.config.ConnectionDB;
 import main.java.com.ismail.insurancemanagement.enums.ClaimType;
+import main.java.com.ismail.insurancemanagement.enums.ContractType;
 import main.java.com.ismail.insurancemanagement.model.Claim;
 import main.java.com.ismail.insurancemanagement.model.Client;
+import main.java.com.ismail.insurancemanagement.model.Contract;
 
 import java.sql.*;
 import java.time.LocalDate;
-import java.util.ArrayList;
+import java.util.*;
 import java.util.Date;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
 import java.util.stream.Collectors;
 
 public class ClaimDAO {
@@ -55,7 +54,7 @@ public class ClaimDAO {
 
     // ========================= SEARCH BY ID ==========================
     public Optional<Claim> searchClaimById(UUID id) {
-        String sql = "SELECT * FROM Claim WHERE id = ?";
+        String sql = "SELECT c.* FROM Claim c WHERE id = ?";
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setObject(1, id);
             ResultSet rs = stmt.executeQuery();
@@ -70,38 +69,36 @@ public class ClaimDAO {
 
 
     // ========================= TOTAL COST ============================
-    public double calculeTotalCostOfClaimsForClient(UUID clientId) {
-        String sql = "SELECT c.*" +
-                "FROM Claim c " +
-                "JOIN Contract ct ON c.idContract = ct.id where ct.idClient = ?";
+        public ArrayList<Claim> calculeTotalCostOfClaimsForClient(UUID clientId) {
+        String sql = "SELECT c.*,ct.*,cl.* FROM Claim c JOIN Contract ct ON c.idContract = ct.id join Client cl on ct.idClient = cl.id";
 
         ArrayList<Claim> claims = new ArrayList<>();
-        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setObject(1, clientId);
-            ResultSet rs = stmt.executeQuery();
+        try (Statement stmt = conn.createStatement()) {
+            ResultSet rs = stmt.executeQuery(sql);
             while (rs.next()) {
-                claims.add(mapResultSetToClaim(rs));
+                Claim claim = mapResultSetToClaim(rs);
+                claim.getContract().setClient(mapResultSetToClient(rs));
+                claims.add(claim);
             }
         } catch (SQLException e) {
             System.out.println("SQL error in calculeTotalCostOfClaimsForClient: " + e.getMessage());
-            return 0.0;
         }
 
-        return claims.stream()
-                .mapToDouble(Claim::getMontant)
-                .sum();
+        return claims;
     }
 
 
     // ========================= DISPLAY FOR CONTRACT ==================
     public List<Claim> displayForContract(UUID contractId) {
-        String sql = "SELECT * FROM Claim WHERE idContract = ?";
+        String sql = "SELECT c.* , ct.* FROM Claim c join Contract ct ON c.idContract = ct.id";
         List<Claim> claims = new ArrayList<>();
+        List<Contract> contracts = new ArrayList<>();
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setObject(1, contractId.toString());
             ResultSet rs = stmt.executeQuery();
             while (rs.next()) {
                 claims.add(mapResultSetToClaim(rs));
+
             }
         } catch (SQLException e) {
             System.out.println("SQL error in displayForContract: " + e.getMessage());
@@ -112,34 +109,34 @@ public class ClaimDAO {
 
 
 //    // ========================= DISPLAY SORTED ========================
-    public List<Claim> displaySortedByCost() {
-        String sql = "SELECT * FROM Claim ORDER BY amount DESC";
-        List<Claim> claims = new ArrayList<>();
-        try (Statement stmt = conn.createStatement()) {
-            ResultSet rs = stmt.executeQuery(sql);
-            while (rs.next()) {
-                claims.add(mapResultSetToClaim(rs));
-
-            }
-        } catch (SQLException e) {
-            System.out.println("SQL error in displaySortedByCost: " + e.getMessage());
+public List<Claim> displaySortedByCost() {
+    String sql = "SELECT c.*,ct.* FROM Claim c join Contract ct on c.idContract = ct.id ";
+    List<Claim> claims = new ArrayList<>();
+    try (Statement stmt = conn.createStatement()) {
+        ResultSet rs = stmt.executeQuery(sql);
+        while (rs.next()) {
+            claims.add(mapResultSetToClaim(rs));
         }
-        return claims;
+    } catch (SQLException e) {
+        System.out.println("SQL error in displaySortedByCost: " + e.getMessage());
     }
+
+    return claims;
+}
+
 
 
 
     // ========================= DISPLAY FOR CLIENT ====================
     public List<Claim> displayForClient(UUID clientId) {
-        String sql = "SELECT c.* FROM Claim c " +
-                "JOIN Contract ct ON c.idContract = ct.id " +
-                "WHERE ct.idClient = ?";
+        String sql = "SELECT c.*,ct.*,cl.* FROM Claim c JOIN Contract ct ON c.idContract = ct.id JOIN Client cl ON ct.idClient = cl.id";
         List<Claim> claims = new ArrayList<>();
-        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setObject(1, clientId.toString());
-            ResultSet rs = stmt.executeQuery();
+        try (Statement stmt = conn.createStatement()) {
+            ResultSet rs = stmt.executeQuery(sql);
             while (rs.next()) {
-                claims.add(mapResultSetToClaim(rs));
+                    Claim claim = mapResultSetToClaim(rs);
+                    claim.getContract().setClient(mapResultSetToClient(rs));
+                claims.add(claim);
             }
         } catch (SQLException e) {
             System.out.println("SQL error in displayForClient: " + e.getMessage());
@@ -149,11 +146,10 @@ public class ClaimDAO {
 
 //    // ========================= COST GREATER ==========================
     public List<Claim> displaysWithCostGreaterThanAmount(double amount) {
-        String sql = "SELECT * FROM Claim WHERE amount > ?";
+        String sql = "SELECT c.*,ct.* FROM Claim c join Contract ct on c.idContract = ct.id";
         List<Claim> claims = new ArrayList<>();
-        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setDouble(1, amount);
-            ResultSet rs = stmt.executeQuery();
+        try (Statement stmt = conn.createStatement()) {
+            ResultSet rs = stmt.executeQuery(sql);
             while (rs.next()) {
                 claims.add(mapResultSetToClaim(rs));
             }
@@ -163,25 +159,11 @@ public class ClaimDAO {
         return claims;
     }
 
-//    // ========================= UTILITY ===============================
-private Claim mapResultSetToClaim(ResultSet rs) throws SQLException {
-        UUID id = UUID.fromString(rs.getString("id"));
-        ClaimType type = ClaimType.valueOf(rs.getString("type"));
-        double amount = rs.getDouble("amount");
-        String description = rs.getString("description");
-        Date startDate = rs.getDate("startDate");
-        Date endDate = rs.getDate("endDate");
-        Claim claim = new Claim(type, endDate, amount, description);
-        claim.setId(id);
-        claim.setDateDebut(startDate);
-        return claim;
-    }
+
 
     // ========================= DISPLAY CLAIMS BEFORE DATE ==================
     public List<Claim> displayClaimsBeforeDate(Date date) {
-        String sql = "SELECT c.*, ct.idClient " +
-                "FROM Claim c " +
-                "JOIN Contract ct ON c.idContract = ct.id";
+        String sql = "SELECT c.*, ct.idClient FROM Claim c JOIN Contract ct ON c.idContract = ct.id";
 
         List<Claim> claims = new ArrayList<>();
 
@@ -196,11 +178,45 @@ private Claim mapResultSetToClaim(ResultSet rs) throws SQLException {
             return new ArrayList<>();
         }
 
-        return claims.stream()
-                .filter(claim -> claim.getDateDebut().before(date))
-                .collect(Collectors.toList());
+        return claims;
 
     }
 
+
+    //    // ========================= UTILITY ===============================
+    private Claim mapResultSetToClaim(ResultSet rs) throws SQLException {
+        UUID id = UUID.fromString(rs.getString("c.id"));
+        ClaimType type = ClaimType.valueOf(rs.getString("c.type"));
+        double amount = rs.getDouble("c.amount");
+        String description = rs.getString("c.description");
+        Date startDate = rs.getDate("c.startDate");
+        Date endDate = rs.getDate("c.endDate");
+        Claim claim = new Claim(type, endDate, amount, description);
+        claim.setId(id);
+        claim.setDateDebut(startDate);
+        claim.setContract(mapResultSetToContract(rs));
+        return claim;
+    }
+
+    private Contract mapResultSetToContract(ResultSet rs) throws SQLException {
+        UUID id = UUID.fromString(rs.getString("ct.id"));
+        ContractType type = ContractType.valueOf(rs.getString("ct.type"));
+        Date startDate = rs.getDate("ct.startDate");
+        Date endDate = rs.getDate("ct.endDate");
+        Contract contract = new Contract(type, endDate);
+        contract.setId(id);
+        contract.setDateDebut(startDate);
+        return contract;
+    }
+
+    private Client mapResultSetToClient(ResultSet rs) throws SQLException {
+        UUID id = UUID.fromString(rs.getString("cl.id"));
+        String firstName = rs.getString("cl.firstName");
+        String lastname = rs.getString("cl.lastname");
+        String email = rs.getString("cl.email");
+        Client client = new Client(firstName, lastname, email);
+        client.setId(id);
+        return client;
+    }
 
 }

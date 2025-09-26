@@ -382,6 +382,7 @@ public class MainController {
                 List<Claim> claims = displayForContract();
                 if(claims != null) {
                     claimView.displayClaims(claims);
+
                 }else {
                     System.out.println("there is no claims for the contract id ");
                 }

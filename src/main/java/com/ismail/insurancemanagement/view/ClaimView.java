@@ -38,7 +38,7 @@ public class ClaimView {
         for (Claim claim : claims) {
             helper.print("id : "+ claim.getId() +  " , start date : "+ claim.getDateDebut()+ " , end date : "+ claim.getDateFin()+
                     " , type : "+ claim.getClaimType() + " , description : "+claim.getDescription() +
-                    " , amount : "+claim.getMontant());
+                    " , amount : "+claim.getMontant() + " , contract" + claim.getContract().getContractType());
         }
     }
 
