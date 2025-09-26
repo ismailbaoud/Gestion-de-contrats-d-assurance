@@ -1,7 +1,9 @@
 package main.java.com.ismail.insurancemanagement.controller;
 
+import main.java.com.ismail.insurancemanagement.enums.ClaimType;
 import main.java.com.ismail.insurancemanagement.enums.ContractType;
 import main.java.com.ismail.insurancemanagement.model.Advisor;
+import main.java.com.ismail.insurancemanagement.model.Claim;
 import main.java.com.ismail.insurancemanagement.model.Client;
 import main.java.com.ismail.insurancemanagement.model.Contract;
 import main.java.com.ismail.insurancemanagement.util.Helper;
@@ -10,7 +12,9 @@ import main.java.com.ismail.insurancemanagement.view.ClaimView;
 import main.java.com.ismail.insurancemanagement.view.ClientView;
 import main.java.com.ismail.insurancemanagement.view.ContractView;
 
+import javax.crypto.Cipher;
 import javax.imageio.plugins.tiff.TIFFImageReadParam;
+import java.text.Format;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
@@ -32,6 +36,7 @@ public class MainController {
     ClientController clientController = new ClientController();
     AdvisorController advisorController = new AdvisorController();
     ContractController contractController = new ContractController();
+    ClaimController claimController = new ClaimController();
 
 
     public MainController(Integer choice) {
@@ -52,7 +57,7 @@ public class MainController {
                 contractManagement();
                 break;
             case 4:
-                System.out.println("Good Bye !");
+                claimsManagement();
                 break;
             default:
                 System.out.println("Invalid choice, Try Again");
@@ -349,40 +354,176 @@ public class MainController {
         int choice = claimView.getClaimsMenu();
         switch (choice) {
             case 1 :
-                createClaim();
+                if(createClaim()) {
+                    helper.print("the claim created successfully !");
+                }else {
+                    helper.print("the claim not created !");
+                }
                 break;
             case 2 :
-//                deleteClaim();
+                if(deleteClaim()) {
+                    helper.print("the claim deleted successfully");
+                } else {
+                    helper.print("something wrong when deleting claim");
+                }
                 break;
             case 3 :
-//                calculeTotalCostOfClaimsForClient();
+                System.out.println("Your cost total is : " + calculeTotalCostOfClaimsForClient() + " DH");
                 break;
             case 4 :
-//                searchClaimById();
+                Claim claim = searchClaimById();
+                if(claim != null) {
+                    claimView.displayClaim(claim);
+                }else {
+                    helper.print("there is no claim with this id !!");
+                }
                 break;
             case 5 :
-//                displayForContract();
+                List<Claim> claims = displayForContract();
+                if(claims != null) {
+                    claimView.displayClaims(claims);
+                }else {
+                    System.out.println("there is no claims for the contract id ");
+                }
                 break;
             case 6 :
-//                displaySortedByCost();
+                List<Claim> claimsList = displaySortedByCost();
+                if(claimsList != null) {
+                    claimView.displayClaims(claimsList);
+                }else {
+                    System.out.println("there is no claims for the contract id ");
+                }
                 break;
             case 7 :
-//                displayForClient();
+                List<Claim> claims1 = displayForClient();
+                if(claims1 != null) {
+                    claimView.displayClaims(claims1);
+                }else {
+                    helper.print("there is no claims for the client ");
+                }
+
                 break;
             case 8 :
-//                displaysWithCostGreaterThanAmount();
+                List<Claim> claimDate = displayClaimsBeforeDate();
+
+                if(claimDate != null) {
+                    claimView.displayClaims(claimDate);
+                }else {
+                    helper.print("you have no claims before this date !!");
+                }
                 break;
             case 9 :
+                List claimsAmount = displaysWithCostGreaterThanAmount();
+                if(claimsAmount != null) {
+                    claimView.displayClaims(claimsAmount);
+                }else {
+                    helper.print("there is no claims for the client ");
+                }
                 break;
         }
     }
 
     //create claim
-    public void createClaim() {
-        helper.print("Please enter the type of claim : ");
-        helper.print("1 => CAR_ACCIDENT");
-        helper.print("2 => HOUSE_ACCIDENT");
-        helper.print("3 => ILLNESS");
-        System.out.print("Enter your choice");
+    public boolean createClaim(){
+        try {
+            helper.print("Please enter the type of claim : ");
+            helper.print("1 => CAR_ACCIDENT");
+            helper.print("2 => HOUSE_ACCIDENT");
+            helper.print("3 => ILLNESS");
+            System.out.print("Enter your choice");
+            ClaimType claimType = null;
+            Integer choice = scanner.nextInt();
+            boolean condition = true;
+            do {
+                switch (choice) {
+                    case 1:
+                        condition = false;
+                        claimType = ClaimType.CAR_ACCIDENT;
+                        break;
+                    case 2:
+                        condition = false;
+                        claimType = ClaimType.HOUSE_ACCIDENT;
+                        break;
+                    case 3:
+                        condition = false;
+                        claimType = ClaimType.ILLNESS;
+                        break;
+                    default:
+                        break;
+                }
+            } while (condition);
+            helper.print("Please enter end date : ");
+            String endDate = scanner.next();
+            helper.print("Please enter description : ");
+            String description = scanner.next();
+            Date date = formatter.parse(endDate);
+            helper.print("Please enter the Amount of claim : ");
+            Double amount = scanner.nextDouble();
+            helper.print("Please enter contract id : ");
+            UUID contractId = UUID.fromString(scanner.next());
+            return claimController.createClaim(claimType,  amount ,date, description, contractId);
+        }catch (ParseException e) {
+            System.out.println("there is error : " + e.getMessage());
+        }
+        return false;
+    }
+
+    //delete claim
+    public boolean deleteClaim() {
+        helper.print("PLease enter the claim id that you wnatr to delete : ");
+        UUID id = UUID.fromString(scanner.next());
+        return claimController.deleteClaim(id);
+    }
+
+    //calcule Total Cost Of Claims For Client
+    public Double calculeTotalCostOfClaimsForClient() {
+        helper.print("please ethe client id : ");
+        UUID id = UUID.fromString(scanner.next());
+        return claimController.calculeTotalCostOfClaimsForClient(id);
+    }
+
+//     search Claim By Id
+    public Claim searchClaimById() {
+        helper.print("please ethe claim id : ");
+        UUID id = UUID.fromString(scanner.next());
+        return claimController.searchClaimById(id);
+    }
+
+
+    public List<Claim> displayForContract() {
+        helper.print("please ethe contract id : ");
+        UUID id = UUID.fromString(scanner.next());
+        return claimController.displayForContract(id);
+    }
+
+
+    public List<Claim> displaySortedByCost() {
+        return claimController.displaySortedByCost();
+    }
+
+
+    public List<Claim> displayForClient() {
+        helper.print("please the client id : ");
+        UUID id = UUID.fromString(scanner.next());
+        return claimController.displayForClient(id);
+    }
+
+
+    public List<Claim> displaysWithCostGreaterThanAmount() {
+        helper.print("please the amount : ");
+        Double amount = scanner.nextDouble();
+        return claimController.displaysWithCostGreaterThanAmount(amount);
+    }
+
+    public List<Claim> displayClaimsBeforeDate() {
+        try {
+            helper.print("please the Date : ");
+            Date date = formatter.parse(scanner.next());
+            return claimController.displayClaimsBeforeDate(date);
+        }catch (Exception e) {
+            System.out.println("you have err : " + e.getMessage());
+        }
+        return  null;
     }
 }
+
