@@ -3,6 +3,7 @@ package main.java.com.ismail.insurancemanagement.model;
 import main.java.com.ismail.insurancemanagement.enums.ClaimType;
 
 import java.util.Date;
+import java.util.UUID;
 
 public class Claim {
     private ClaimType claimType = null;
@@ -10,13 +11,29 @@ public class Claim {
     private Date dateFin ;
     private double montant ;
     private String description ;
+    private UUID id;
 
-    public Claim(ClaimType claimType, Date dateDebut, Date dateFin, double montant, String description) {
+    private Contract contract;
+
+    @Override
+    public String toString() {
+        return "Claim{" +
+                "claimType=" + claimType +
+                ", dateDebut=" + dateDebut +
+                ", dateFin=" + dateFin +
+                ", montant=" + montant +
+                ", description='" + description + '\'' +
+                ", id=" + id +
+                '}';
+    }
+
+    public Claim(ClaimType claimType, Date dateFin, double montant, String description) {
         this.claimType = claimType;
-        this.dateDebut = dateDebut;
+        this.dateDebut = new Date();
         this.dateFin = dateFin;
         this.montant = montant;
         this.description = description;
+        id = UUID.randomUUID();
     }
 
 
@@ -58,5 +75,21 @@ public class Claim {
 
     public void setDescription(String description) {
         this.description = description;
+    }
+
+    public UUID getId() {
+        return id;
+    }
+
+    public void setId(UUID id) {
+        this.id = id;
+    }
+
+    public Contract getContract() {
+        return contract;
+    }
+
+    public void setContract(Contract contract) {
+        this.contract = contract;
     }
 }

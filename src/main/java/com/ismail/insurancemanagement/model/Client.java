@@ -7,6 +7,7 @@ public class Client extends Person {
 
 
     private HashMap<String, Contract> contracts =new HashMap<String,Contract>();
+
     private Advisor advisor ;
 
     public Client(String firstName, String lastName, String email) {

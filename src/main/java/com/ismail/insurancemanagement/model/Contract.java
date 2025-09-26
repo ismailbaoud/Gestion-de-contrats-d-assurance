@@ -2,21 +2,32 @@ package main.java.com.ismail.insurancemanagement.model;
 
 import main.java.com.ismail.insurancemanagement.enums.ContractType;
 
-import java.util.ArrayList;
 import java.util.Date;
-import java.util.HashMap;
+import java.util.UUID;
 
-public abstract class Contract {
+public class Contract {
     private ContractType contractType = null;
     private Date dateDebut ;
     private Date dateFin ;
-    private HashMap<String, Claim> sinistes = new HashMap<String,Claim>();
+    private UUID id ;
 
-    public Contract(ContractType contractType, Date dateDebut, Date dateFin, HashMap<String, Claim> sinistes) {
+    private Client client;
+
+    
+
+    public Contract(ContractType contractType, Date dateFin) {
         this.contractType = contractType;
-        this.dateDebut = dateDebut;
+        this.dateDebut = new Date();
         this.dateFin = dateFin;
-        this.sinistes = sinistes;
+        this.id = UUID.randomUUID();
+    }
+
+    public UUID getId() {
+        return id;
+    }
+
+    public void setId(UUID id) {
+        this.id = id;
     }
 
     public ContractType getContractType() {
@@ -43,11 +54,11 @@ public abstract class Contract {
         this.dateFin = dateFin;
     }
 
-    public HashMap<String, Claim> getSinistes() {
-        return sinistes;
+    public Client getClient() {
+        return client;
     }
 
-    public void setSinistes(HashMap<String, Claim> sinistes) {
-        this.sinistes = sinistes;
+    public void setClient(Client client) {
+        this.client = client;
     }
 }
