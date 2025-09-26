@@ -351,7 +351,11 @@ public class MainController {
         //        8. Display the list of claims before a given date
         //        9. Display the list of claims with cost greater than a given amount
         //        0. Exit
-        int choice = claimView.getClaimsMenu();
+        int choice;
+        do {
+         choice = claimView.getClaimsMenu();
+
+
         switch (choice) {
             case 1 :
                 if(createClaim()) {
@@ -422,6 +426,8 @@ public class MainController {
                 }
                 break;
         }
+
+        }while (choice !=0);
     }
 
     //create claim
